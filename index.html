@@ -1,0 +1,658 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta property="og:title" content="QuickLancer">
+<meta property="og:description" content="Os atendimentos do dia lançados e confirmados no FastMedic, sozinhos.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<style>:root{color-scheme:light}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>QuickLancer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="QuickLancer lança e confirma os atendimentos do dia no FastMedic a partir da planilha da clínica.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: faixa escura do produto no topo, depois seções claras em coluna central de 1120px; cada seção tem um único trabalho. */
+:root{
+  --petroleo:#0B3B40; --petroleo-2:#145A60; --teal:#19B3A6; --menta:#3DDC97;
+  --bg:#F2F6F5; --cartao:#FFFFFF; --texto:#10272A; --suave:#4C6A6D; --linha:#DCE7E6;
+  --chip-ok:#E2F4EA; --chip-ok-t:#155C34; --chip-aviso:#FFF1DE; --chip-aviso-t:#7E4407;
+  --sobre-escuro:#D6E8E7; --sobre-escuro-2:#9EC3C3;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --corpo:"Figtree", "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0C1D1F; --cartao:#12292C; --texto:#E4F0EF; --suave:#9DB9BA; --linha:#21403F;
+  --chip-ok:#173D2A; --chip-ok-t:#9BE5BC; --chip-aviso:#3D2C14; --chip-aviso-t:#F6C987; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0C1D1F; --cartao:#12292C; --texto:#E4F0EF; --suave:#9DB9BA; --linha:#21403F;
+  --chip-ok:#173D2A; --chip-ok-t:#9BE5BC; --chip-aviso:#3D2C14; --chip-aviso-t:#F6C987; color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{background:var(--bg);color:var(--texto);font-family:var(--corpo);font-size:16px;line-height:1.55}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--petroleo)}
+a{color:inherit}
+.miolo{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;letter-spacing:-.02em}
+h2{font-size:clamp(28px,4vw,40px);font-weight:800;line-height:1.1}
+h3{font-size:19px;font-weight:600}
+p{margin:0}
+.rotulo{font-size:12.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--teal)}
+.mono{font-family:var(--mono)}
+:focus-visible{outline:3px solid var(--menta);outline-offset:3px;border-radius:6px}
+
+/* topo */
+.topo{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--petroleo);color:#fff}
+.topo .miolo{display:flex;align-items:center;gap:20px;min-height:64px;flex-wrap:wrap;padding-block:8px}
+.marca{display:flex;align-items:center;gap:10px;text-decoration:none;font-family:var(--display);font-weight:800;font-size:20px}
+.marca small{display:block;font-family:var(--corpo);font-weight:500;font-size:11.5px;color:var(--sobre-escuro-2);letter-spacing:0}
+.nav{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap;align-items:center}
+.nav a{text-decoration:none;color:var(--sobre-escuro);font-weight:600;font-size:14.5px;padding:8px 12px;border-radius:8px}
+.nav a:hover{background:var(--petroleo-2);color:#fff}
+.nav a.cta{background:var(--menta);color:var(--petroleo)}
+.nav a.cta:hover{background:#5BE6AA}
+
+/* abertura */
+.abertura{background:var(--petroleo);color:#fff;padding-block:56px 72px;overflow:hidden}
+.abertura .miolo{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:48px;align-items:center}
+.abertura h1{font-size:clamp(36px,5.6vw,62px);font-weight:800;line-height:1.02}
+.abertura h1 em{font-style:normal;color:var(--menta)}
+.abertura p.lead{font-size:18.5px;color:var(--sobre-escuro);max-width:34em;margin-top:18px}
+.botoes{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 22px;border-radius:12px;font-weight:700;font-size:16px;text-decoration:none;border:0;cursor:pointer;font-family:var(--corpo)}
+.btn.prim{background:var(--menta);color:var(--petroleo)}
+.btn.prim:hover{background:#5BE6AA}
+.btn.sec{background:transparent;color:#fff;box-shadow:inset 0 0 0 1.5px #3F7378}
+.btn.sec:hover{background:var(--petroleo-2)}
+.compat{margin-top:22px;font-size:13.5px;color:var(--sobre-escuro-2)}
+
+/* a "agenda" da abertura: o que o programa faz, mostrado */
+.agenda{background:#0F4A50;border-radius:18px;padding:18px;box-shadow:0 30px 60px rgba(0,0,0,.28);min-width:0}
+.agenda-topo{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;color:var(--sobre-escuro-2);margin-bottom:12px;flex-wrap:wrap}
+.agenda-topo b{color:#fff;font-size:14px}
+.barra{height:8px;border-radius:4px;background:#0B3B40;overflow:hidden;margin-bottom:12px}
+.barra i{display:block;height:100%;width:72%;background:var(--teal);border-radius:4px;animation:enche 6s ease-in-out infinite alternate}
+@keyframes enche{from{width:58%}to{width:86%}}
+.slot{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:12px;align-items:center;background:#fff;color:#10272A;border-radius:10px;padding:10px 12px;margin-top:8px;font-size:14px}
+.slot .h{font-family:var(--mono);font-size:13px;color:#4C6A6D}
+.slot b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slot small{display:block;color:#5C7678;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slot small .mono{font-size:11.5px}
+.selo{font-size:12px;font-weight:700;border-radius:999px;padding:4px 10px;white-space:nowrap}
+.selo.ok{background:#E2F4EA;color:#155C34}
+.selo.agora{background:#FFF1DE;color:#7E4407}
+.slot.vivo{animation:pulsa 2.4s ease-in-out infinite}
+@keyframes pulsa{50%{box-shadow:0 0 0 3px var(--menta)}}
+.agenda .nota{font-size:11.5px;color:var(--sobre-escuro-2);margin-top:10px}
+
+/* seções */
+section.bloco{padding-block:72px}
+section[id]{scroll-margin-top:calc(env(safe-area-inset-top,0px) + 72px)}
+.cabeca{display:flex;flex-direction:column;gap:10px;max-width:46em;margin-bottom:36px}
+.cabeca p{color:var(--suave);font-size:17.5px}
+.passos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;counter-reset:p}
+.passo{background:var(--cartao);border:1px solid var(--linha);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:10px}
+.passo .n{font-family:var(--display);font-weight:800;font-size:15px;width:34px;height:34px;border-radius:17px;background:var(--petroleo);color:var(--menta);display:flex;align-items:center;justify-content:center}
+.passo p{color:var(--suave)}
+.recursos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px 32px}
+.recurso{display:flex;flex-direction:column;gap:6px;padding-top:16px;border-top:2px solid var(--linha)}
+.recurso p{color:var(--suave);font-size:15.5px}
+.faixa-dados{background:var(--cartao);border:1px solid var(--linha);border-radius:18px;padding:28px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:22px;align-items:center;margin-top:44px}
+.faixa-dados .ic{width:56px;height:56px;border-radius:16px;background:var(--petroleo);display:flex;align-items:center;justify-content:center}
+.faixa-dados p{color:var(--suave)}
+
+/* planos */
+.planos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;align-items:stretch}
+.plano{background:var(--cartao);border:1px solid var(--linha);border-radius:18px;padding:28px 26px;display:flex;flex-direction:column;gap:14px}
+.plano.dest{border:2px solid var(--teal)}
+.plano .tag{align-self:flex-start;font-size:12px;font-weight:700;background:var(--teal);color:#fff;border-radius:999px;padding:4px 10px}
+.plano .preco{font-family:var(--display);font-weight:800;font-size:34px;letter-spacing:-.02em}
+.plano .preco small{font-family:var(--corpo);font-size:15px;font-weight:500;color:var(--suave)}
+.plano ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px;flex:1}
+.plano li{display:flex;gap:10px;color:var(--suave);font-size:15px}
+.plano li::before{content:"";flex:0 0 18px;height:18px;margin-top:3px;border-radius:9px;background:var(--chip-ok) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23155C34' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12l4 4 8-8'/%3E%3C/svg%3E") center/12px no-repeat}
+.plano .btn{width:100%}
+.btn.borda{background:transparent;color:var(--texto);box-shadow:inset 0 0 0 1.5px var(--linha)}
+.btn.borda:hover{box-shadow:inset 0 0 0 1.5px var(--teal)}
+.btn.escuro{background:var(--petroleo);color:#fff}
+.btn.escuro:hover{background:var(--petroleo-2)}
+.social{margin-top:22px;background:var(--chip-aviso);color:var(--chip-aviso-t);border-radius:16px;padding:20px 24px;display:flex;gap:18px;align-items:center;flex-wrap:wrap;justify-content:space-between}
+.social b{font-size:17px}
+.social p{max-width:44em}
+.obs{font-size:13.5px;color:var(--suave);margin-top:14px}
+
+/* tutorial */
+.tutorial{display:grid;grid-template-columns:260px minmax(0,1fr);gap:28px;align-items:start}
+.indice{position:sticky;top:calc(env(safe-area-inset-top,0px) + 84px);display:flex;flex-direction:column;gap:4px}
+.indice button{font:inherit;text-align:left;background:none;border:0;padding:10px 12px;border-radius:10px;color:var(--suave);font-weight:600;cursor:pointer}
+.indice button[aria-selected="true"]{background:var(--petroleo);color:#fff}
+.indice button:hover:not([aria-selected="true"]){background:var(--cartao)}
+.licao{background:var(--cartao);border:1px solid var(--linha);border-radius:18px;padding:30px;min-width:0}
+.licao h3{font-size:24px;font-family:var(--display);font-weight:800;margin-bottom:6px}
+.licao>p{color:var(--suave);margin-bottom:18px}
+.licao ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:12px}
+.licao li{padding-left:4px}
+.licao li b{font-weight:700}
+.dica{margin-top:20px;border-radius:12px;background:var(--bg);padding:14px 16px;font-size:14.5px;color:var(--suave)}
+kbd{font-family:var(--mono);font-size:13px;background:var(--bg);border:1px solid var(--linha);border-radius:6px;padding:1px 6px}
+
+/* dúvidas */
+.duvidas{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 24px}
+details{background:var(--cartao);border:1px solid var(--linha);border-radius:14px;padding:4px 18px}
+summary{cursor:pointer;font-weight:700;padding:14px 0;list-style:none;display:flex;justify-content:space-between;gap:12px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font-family:var(--display);font-size:22px;line-height:1;color:var(--teal)}
+details[open] summary::after{content:"–"}
+details p{color:var(--suave);padding-bottom:16px}
+
+/* baixar */
+.baixar{background:var(--petroleo);color:#fff;border-radius:22px;padding:40px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px}
+.baixar h2{color:#fff}
+.baixar .lead{color:var(--sobre-escuro);margin-top:12px}
+.req{margin-top:22px;display:flex;flex-direction:column;gap:8px;color:var(--sobre-escuro);font-size:15px}
+.req span::before{content:"✓  ";color:var(--menta);font-weight:700}
+form{display:flex;flex-direction:column;gap:14px;min-width:0}
+.campo{display:flex;flex-direction:column;gap:6px}
+.campo label{font-size:13.5px;font-weight:700;color:var(--sobre-escuro)}
+.campo input,.campo select{font:inherit;font-size:16px;min-height:48px;border-radius:10px;border:1.5px solid #3F7378;background:#0F4A50;color:#fff;padding:0 14px}
+.campo input::placeholder{color:#8CB0B0}
+.campo input:focus{border-color:var(--menta);outline:none}
+.duas-col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.erro{color:#FFB4A6;font-weight:600;font-size:14px;min-height:1em}
+.pronto{display:flex;flex-direction:column;gap:14px;background:#0F4A50;border-radius:16px;padding:24px}
+.pronto p{color:var(--sobre-escuro)}
+.copiar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:14px;color:var(--sobre-escuro)}
+.copiar button{font:inherit;font-weight:700;font-size:13px;background:transparent;color:#fff;border:1.5px solid #3F7378;border-radius:8px;padding:6px 10px;cursor:pointer}
+
+/* demonstrações */
+.demo-abas{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.demo-abas button,.periodo button{font:inherit;font-weight:700;font-size:14.5px;border:1.5px solid var(--linha);background:var(--cartao);color:var(--texto);border-radius:999px;padding:9px 16px;cursor:pointer;min-height:44px}
+.demo-abas button[aria-selected="true"],.periodo button[aria-checked="true"]{background:var(--petroleo);border-color:var(--petroleo);color:#fff}
+.demo{background:var(--petroleo);border-radius:20px;padding:22px;color:#fff;min-height:420px;display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:22px;align-items:start}
+.tela{background:#fff;color:#10272A;border-radius:14px;overflow:hidden;min-width:0;box-shadow:0 20px 40px rgba(0,0,0,.25)}
+.tela-barra{background:#E8EFEF;padding:8px 12px;font-size:12px;font-weight:700;color:#4C6A6D;display:flex;gap:8px;align-items:center}
+.tela-barra i{width:9px;height:9px;border-radius:5px;background:#C9D6D6;display:inline-block}
+.tela-corpo{padding:14px;overflow-x:auto}
+.grade{border-collapse:collapse;width:100%;font-size:13px;min-width:380px}
+.grade th,.grade td{border:1px solid #D3DFDF;padding:6px 8px;text-align:left;white-space:nowrap}
+.grade th{background:#1F4E78;color:#fff;font-weight:700}
+.grade th.proc{background:#DCE8F3;color:#1F4E78;font-size:11.5px;font-weight:600}
+.grade td.h{background:#F2F6F6;font-family:var(--mono);font-size:12px;color:#4C6A6D;width:62px}
+.grade td.x{text-align:center;font-weight:800;color:#155C34}
+.grade td.digitando{background:#FFF8D6}
+.cursor::after{content:"|";animation:pisca 1s steps(1) infinite;margin-left:1px}
+@keyframes pisca{50%{opacity:0}}
+.faixa-demo{margin-top:12px;border-radius:10px;padding:10px 12px;font-weight:700;font-size:13.5px;display:flex;gap:8px;align-items:center}
+.faixa-demo.ok{background:#E2F4EA;color:#155C34}
+.faixa-demo.espera{background:#EEF3F3;color:#4C6A6D}
+.fila{display:flex;flex-direction:column;gap:8px}
+.fila .slot{margin:0;background:#F4F8F8}
+.fila .slot.atual{background:#fff;box-shadow:0 0 0 2px var(--menta)}
+.selo.espera{background:#E8EFEF;color:#4C6A6D}
+.etapas-demo{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;counter-reset:e}
+.etapas-demo li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;color:var(--sobre-escuro-2);font-size:15px;line-height:1.45;transition:color .3s}
+.etapas-demo li::before{counter-increment:e;content:counter(e);width:28px;height:28px;border-radius:14px;background:#0F4A50;color:var(--sobre-escuro-2);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+.etapas-demo li.on{color:#fff}
+.etapas-demo li.on::before{background:var(--menta);color:var(--petroleo)}
+.demo h3{color:#fff;font-size:20px;margin-bottom:12px}
+.ag{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.ag div{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#F4F8F8;border-radius:8px;padding:7px 10px;font-size:13px}
+.ag .h{font-family:var(--mono);font-size:12px;color:#4C6A6D;min-width:44px}
+.chip{background:#E2F4EA;color:#155C34;border-radius:999px;padding:2px 8px;font-size:11.5px;font-weight:700}
+
+/* planos: período */
+.controles{display:flex;gap:16px 28px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
+.periodo{display:flex;gap:8px;flex-wrap:wrap}
+.pcs{display:flex;align-items:center;gap:12px;font-weight:700}
+.passo-pcs{display:flex;align-items:center;background:var(--cartao);border:1.5px solid var(--linha);border-radius:999px;overflow:hidden}
+.passo-pcs button{font:inherit;font-size:22px;font-weight:700;width:46px;height:44px;border:0;background:none;color:var(--texto);cursor:pointer}
+.passo-pcs button:hover:not(:disabled){background:var(--bg)}
+.passo-pcs button:disabled{opacity:.35;cursor:not-allowed}
+.passo-pcs output{min-width:40px;text-align:center;font-family:var(--display);font-weight:800;font-size:20px;font-variant-numeric:tabular-nums}
+.economia{font-size:11.5px;background:var(--menta);color:var(--petroleo);border-radius:999px;padding:2px 8px;margin-left:4px}
+.planos.dois{grid-template-columns:repeat(2,minmax(0,1fr))}
+.plano .sub{color:var(--suave);font-size:15px;margin-top:-6px}
+.plano .equiv{font-size:13.5px;color:var(--teal);font-weight:700;margin-top:-10px;min-height:1.4em}
+
+footer{padding-block:48px 56px;color:var(--suave);font-size:14px}
+footer .miolo{display:flex;flex-wrap:wrap;gap:20px 40px;justify-content:space-between}
+footer b{color:var(--texto)}
+footer p+p{margin-top:6px}
+
+@media (max-width:900px){
+  .abertura .miolo,.baixar,.tutorial{grid-template-columns:minmax(0,1fr)}
+  .passos,.planos,.planos.dois,.recursos,.demo{grid-template-columns:minmax(0,1fr)}
+  .duvidas{grid-template-columns:minmax(0,1fr)}
+  .indice{position:static;flex-direction:row;flex-wrap:wrap}
+  .baixar{padding:26px}
+  .nav{margin-left:0}
+}
+@media (max-width:520px){.duas-col{grid-template-columns:minmax(0,1fr)}.faixa-dados{grid-template-columns:minmax(0,1fr)}}
+</style>
+
+</head>
+<body>
+<header class="topo">
+  <div class="miolo">
+    <a class="marca" href="#inicio" aria-label="QuickLancer, início">
+      <svg width="38" height="38" viewBox="0 0 256 256" aria-hidden="true"><rect x="8" y="8" width="240" height="240" rx="56" fill="#145A60"/><circle cx="116" cy="118" r="62" fill="none" stroke="#19B3A6" stroke-width="28"/><line x1="128" y1="130" x2="196" y2="198" stroke="#3DDC97" stroke-width="18" stroke-linecap="round"/><polygon points="226,228 176,212 212,176" fill="#3DDC97"/></svg>
+      <span>QuickLancer<small>compatível com FastMedic</small></span>
+    </a>
+    <nav class="nav" aria-label="Seções">
+      <a href="#como-funciona">Como funciona</a>
+      <a href="#veja">Veja funcionando</a>
+      <a href="#planos">Planos</a>
+      <a href="#tutorial">Tutorial</a>
+      <a href="#duvidas">Dúvidas</a>
+      <a class="cta" href="#baixar">Baixar</a>
+    </nav>
+  </div>
+</header>
+
+<main id="inicio">
+  <section class="abertura" aria-labelledby="t-abertura">
+    <div class="miolo">
+      <div>
+        <h1 id="t-abertura">A planilha do dia vira <em>agendado e confirmado</em> no FastMedic. Sozinho.</h1>
+        <p class="lead">O QuickLancer lê a planilha dos atendimentos, agenda cada um na Interconsulta e confirma a consulta com o número do boleto. A recepção só confere o relatório no fim.</p>
+        <div class="botoes">
+          <a class="btn prim" href="#baixar">Baixar o QuickLancer</a>
+          <a class="btn sec" href="#planos">Ver planos</a>
+        </div>
+        <p class="compat">Para clínicas, centros de reabilitação e instituições que usam o FastMedic · Windows 10 e 11</p>
+      </div>
+      <div class="agenda" aria-label="Exemplo do QuickLancer lançando os atendimentos">
+        <div class="agenda-topo"><b>Lançando no FastMedic</b><span>18 de 25 atendimentos</span></div>
+        <div class="barra" aria-hidden="true"><i></i></div>
+        <div class="slot"><span class="h">07:00</span><span><b>Paciente Exemplo A</b><small>Fisioterapia · boleto <span class="mono">2026/000412-7</span></small></span><span class="selo ok">Confirmado</span></div>
+        <div class="slot"><span class="h">07:20</span><span><b>Paciente Exemplo B</b><small>Fonoaudiologia · boleto <span class="mono">2026/000413-5</span></small></span><span class="selo ok">Confirmado</span></div>
+        <div class="slot"><span class="h">07:24</span><span><b>Paciente Exemplo C</b><small>Oftalmologia · 3 procedimentos</small></span><span class="selo ok">Confirmado</span></div>
+        <div class="slot vivo"><span class="h">07:40</span><span><b>Paciente Exemplo D</b><small>Psicologia · <span class="mono">0301070075</span></small></span><span class="selo agora">Agendando…</span></div>
+        <p class="nota">Exemplo ilustrativo. Os nomes são fictícios.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="bloco" id="como-funciona" aria-labelledby="t-como">
+    <div class="miolo">
+      <div class="cabeca">
+        <span class="rotulo">Como funciona</span>
+        <h2 id="t-como">Três passos, do jeito que a recepção já trabalha</h2>
+        <p>Nada de cadastro novo no FastMedic. O QuickLancer usa a mesma planilha que a equipe já preenche e faz no sistema o que uma pessoa faria, um atendimento de cada vez.</p>
+      </div>
+      <div class="passos">
+        <div class="passo"><span class="n">1</span><h3>Planilha do dia</h3><p>Um clique cria a planilha de hoje com a data certa. Dá para trazer os pacientes da semana passada e só ajustar quem não vem.</p></div>
+        <div class="passo"><span class="n">2</span><h3>Conferência</h3><p>Antes de lançar, o programa aponta o que falta: paciente sem número, terapeuta sem cadastro, procedimento não marcado.</p></div>
+        <div class="passo"><span class="n">3</span><h3>Lançar e confirmar</h3><p>Cada atendimento é agendado na Interconsulta e confirmado logo depois, com o boleto. No fim sai um relatório com tudo.</p></div>
+      </div>
+
+      <div class="cabeca" style="margin-top:72px">
+        <span class="rotulo">O que ele faz por você</span>
+        <h2>Feito para a rotina de reabilitação</h2>
+      </div>
+      <div class="recursos">
+        <div class="recurso"><h3>Terapias e médicos</h3><p>Terapeutas na grade de horários. Médicos numa tabela própria: marque um X em cada procedimento e cada X vira um agendamento.</p></div>
+        <div class="recurso"><h3>Horário pela ordem</h3><p>O 1º paciente da manhã vai para o 1º horário livre da agenda do profissional, o 2º para o seguinte. Funciona com agendas de 12, 15, 20 ou 30 minutos.</p></div>
+        <div class="recurso"><h3>Confirmação dos dias anteriores</h3><p>Ficou algo sem confirmar? Escolha o dia e o programa confirma usando os boletos guardados, dentro do prazo de 3 dias.</p></div>
+        <div class="recurso"><h3>Relatório com os boletos</h3><p>Cada lançamento gera um relatório em Excel: o que entrou, o que foi confirmado e o motivo do que precisou de atenção.</p></div>
+        <div class="recurso"><h3>Pode usar o computador</h3><p>Enquanto ele lança, a equipe continua usando o Excel, o WhatsApp e outros programas. Só não mexe na janela do Chrome dele.</p></div>
+        <div class="recurso"><h3>Sempre atualizado</h3><p>As versões novas chegam sozinhas, com assinatura digital conferida antes de instalar. Os cadastros e planilhas não são alterados.</p></div>
+      </div>
+
+      <div class="faixa-dados">
+        <div class="ic" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3DDC97" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg></div>
+        <div><h3>Os dados dos pacientes ficam na clínica</h3><p>Planilhas, cadastro e relatórios ficam no computador da instituição. O QuickLancer não envia dados de pacientes para nós e não guarda a senha do FastMedic: o login é sempre feito pela própria equipe.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="bloco" id="veja" aria-labelledby="t-veja" style="padding-top:0">
+    <div class="miolo">
+      <div class="cabeca">
+        <span class="rotulo">Veja funcionando</span>
+        <h2 id="t-veja">Do Excel ao FastMedic, sem ninguém clicando</h2>
+        <p>Demonstrações do que acontece em cada etapa. Os nomes são fictícios.</p>
+      </div>
+      <div class="demo-abas" role="tablist" aria-label="Demonstrações">
+        <button type="button" role="tab" data-demo="planilha" aria-selected="true">1 · A planilha do dia</button>
+        <button type="button" role="tab" data-demo="lancar" aria-selected="false">2 · Lançando sozinho</button>
+        <button type="button" role="tab" data-demo="medicos" aria-selected="false">3 · Médicos com vários procedimentos</button>
+      </div>
+      <div class="demo" id="demo" role="tabpanel" aria-live="off"></div>
+      <p class="obs" id="demo-legenda"></p>
+    </div>
+  </section>
+
+  <section class="bloco" id="planos" aria-labelledby="t-planos" style="padding-top:0">
+    <div class="miolo">
+      <div class="cabeca">
+        <span class="rotulo">Planos</span>
+        <h2 id="t-planos">Preço por computador. No anual, você paga 10 meses e usa 12.</h2>
+        <p>A licença fica presa ao computador e é renovada sem reinstalar nada. Atualizações e suporte incluídos.</p>
+      </div>
+      <div class="controles">
+        <div class="periodo" role="radiogroup" aria-label="Período da assinatura">
+          <button type="button" role="radio" data-per="mensal" aria-checked="true">Mensal</button>
+          <button type="button" role="radio" data-per="anual" aria-checked="false">Anual <span class="economia">2 meses grátis</span></button>
+        </div>
+        <div class="pcs">
+          <span id="pcs-rot">Computadores</span>
+          <div class="passo-pcs" role="group" aria-labelledby="pcs-rot">
+            <button type="button" id="pcs-menos" aria-label="Menos um computador">−</button>
+            <output id="pcs-n" aria-live="polite">1</output>
+            <button type="button" id="pcs-mais" aria-label="Mais um computador">+</button>
+          </div>
+        </div>
+      </div>
+      <p class="obs" style="margin:-6px 0 18px">A partir do 2º computador, cada um sai com <b>15% de desconto</b>.</p>
+      <div class="planos dois">
+        <div class="plano">
+          <h3>Basic</h3>
+          <p class="sub">Lançamento e confirmação automáticos a partir da planilha do dia.</p>
+          <div class="preco" data-base="349.90"><span class="valor">R$ 349,90</span><small class="unid"> /mês</small></div>
+          <p class="equiv">1 computador</p>
+          <ul><li>Terapias e médicos (vários procedimentos)</li><li>Agenda e confirma com o boleto</li><li>Confirmação dos dias anteriores</li><li>Planilha do dia já preenchida da semana anterior</li><li>Relatório de cada lançamento</li><li>Atualizações e suporte pelo WhatsApp</li></ul>
+          <a class="btn escuro" href="#baixar">Começar com o Basic</a>
+        </div>
+        <div class="plano dest">
+          <span class="tag">Em breve</span>
+          <h3>Pro</h3>
+          <p class="sub">Tudo do Basic, mais a leitura das folhas de frequência escaneadas.</p>
+          <div class="preco" data-base="549.90"><span class="valor">R$ 549,90</span><small class="unid"> /mês</small></div>
+          <p class="equiv">1 computador</p>
+          <ul><li>Tudo do Basic</li><li>Lê as folhas de frequência do scanner</li><li>Reconhece os nomes escritos à mão e as assinaturas</li><li>Monta a planilha do dia sozinho, só com os presentes</li><li>Mostra para conferir só o que ficou em dúvida</li></ul>
+          <a class="btn borda" href="https://wa.me/5585988407423?text=Ol%C3%A1!%20Quero%20saber%20quando%20o%20QuickLancer%20Pro%20(leitura%20das%20folhas)%20fica%20dispon%C3%ADvel." target="_blank" rel="noopener">Quero ser avisado</a>
+        </div>
+      </div>
+      <div class="social">
+        <div><b>Instituições filantrópicas</b><p>Temos condição especial para entidades sem fins lucrativos e para quem tem vários computadores, com proposta, contrato e nota fiscal. Fale com o suporte e conte como é a sua instituição.</p></div>
+        <a class="btn escuro" href="https://wa.me/5585988407423?text=Ol%C3%A1!%20Quero%20saber%20sobre%20a%20condi%C3%A7%C3%A3o%20do%20QuickLancer%20para%20institui%C3%A7%C3%B5es." target="_blank" rel="noopener">Falar no WhatsApp</a>
+      </div>
+      <p class="obs">Pagamento por Pix, cartão de crédito, boleto ou transferência. Instituições podem pedir proposta e nota fiscal.</p>
+    </div>
+  </section>
+
+  <section class="bloco" id="tutorial" aria-labelledby="t-tutorial" style="padding-top:0">
+    <div class="miolo">
+      <div class="cabeca">
+        <span class="rotulo">Tutorial</span>
+        <h2 id="t-tutorial">Aprenda a usar em poucos minutos</h2>
+        <p>O passo a passo completo, do primeiro acesso ao lançamento do dia.</p>
+      </div>
+      <div class="tutorial">
+        <div class="indice" role="tablist" aria-label="Lições do tutorial" id="indice"></div>
+        <article class="licao" role="tabpanel" id="licao" tabindex="0"></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="bloco" id="duvidas" aria-labelledby="t-duvidas" style="padding-top:0">
+    <div class="miolo">
+      <div class="cabeca"><span class="rotulo">Dúvidas</span><h2 id="t-duvidas">Perguntas frequentes</h2></div>
+      <div class="duvidas">
+        <details><summary>O QuickLancer é do FastMedic?</summary><p>Não. É um programa independente, compatível com o FastMedic. Ele usa o sistema pela tela, como uma pessoa faria, com o usuário e a senha da própria instituição.</p></details>
+        <details><summary>Preciso deixar o computador parado enquanto ele lança?</summary><p>Não. A equipe pode usar o computador normalmente. Só não feche, não minimize e não clique na janela do Chrome que o QuickLancer abriu.</p></details>
+        <details><summary>Ele guarda a minha senha do FastMedic?</summary><p>Não. A cada lançamento o Chrome abre e a própria equipe faz o login. Depois é só clicar em “Já fiz o login”.</p></details>
+        <details><summary>Para onde vão os dados dos pacientes?</summary><p>Ficam no computador da instituição, na pasta do QuickLancer. Nada é enviado para nós. Relatórios e capturas com mais de 7 dias são apagados sozinhos.</p></details>
+        <details><summary>E se der erro no meio?</summary><p>É só lançar de novo: o programa pula o que já foi feito. O que não deu certo aparece no relatório com o motivo e o número do boleto, para conferir.</p></details>
+        <details><summary>Dá para testar antes de lançar de verdade?</summary><p>Sim. O botão “Testar” faz todo o caminho sem gravar nada. E dá para lançar só 1 paciente para conferir no FastMedic antes de lançar o dia inteiro.</p></details>
+        <details><summary>Como funciona a licença?</summary><p>Depois de instalar, o programa mostra o código do computador. Você envia esse código para o suporte e recebe a chave de ativação. A licença vale pelo período contratado.</p></details>
+        <details><summary>Funciona em mais de um computador?</summary><p>Sim. O preço é por computador, e cada um recebe a sua ativação. A partir do 2º computador, cada um sai com 15% de desconto.</p></details>
+        <details><summary>Troquei de computador. E agora?</summary><p>A transferência é gratuita, até 2 vezes por ano. No computador antigo, abra a Assinatura e clique em “Transferir para outro computador”: o programa se desliga ali e mostra um código de transferência. Mande esse código e o código do computador novo para o suporte. A chave nova mantém a mesma validade, e o computador antigo deixa de funcionar. Se o antigo quebrou ou foi roubado, fale com o suporte do mesmo jeito.</p></details>
+        <details><summary>Precisa de internet?</summary><p>Sim, o mesmo acesso que o FastMedic já usa. O QuickLancer também confere a licença e as atualizações pela internet; se ficar mais de 10 dias sem conseguir, ele pede para conectar antes de continuar.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="bloco" id="baixar" aria-labelledby="t-baixar" style="padding-top:0">
+    <div class="miolo">
+      <div class="baixar">
+        <div>
+          <span class="rotulo" style="color:var(--menta)">Baixar</span>
+          <h2 id="t-baixar" style="margin-top:10px">Instale e peça a sua ativação</h2>
+          <p class="lead">Preencha os dados ao lado para liberar o download. Depois de instalar, o QuickLancer mostra o código do computador: envie para o suporte e receba a chave.</p>
+          <div class="req">
+            <span>Windows 10 ou 11</span>
+            <span>Google Chrome ou Microsoft Edge</span>
+            <span>Usuário com acesso ao FastMedic (Interconsulta)</span>
+            <span>Excel para preencher a planilha do dia</span>
+          </div>
+        </div>
+        <div>
+          <form id="form" novalidate>
+            <div class="campo"><label for="f-nome">Seu nome</label><input id="f-nome" autocomplete="name" required placeholder="Nome e sobrenome"></div>
+            <div class="campo"><label for="f-inst">Instituição</label><input id="f-inst" autocomplete="organization" required placeholder="Nome da clínica ou instituição"></div>
+            <div class="duas-col">
+              <div class="campo"><label for="f-cidade">Cidade</label><input id="f-cidade" autocomplete="address-level2" placeholder="Cidade / UF"></div>
+              <div class="campo"><label for="f-contato">WhatsApp ou e-mail</label><input id="f-contato" required placeholder="(00) 00000-0000"></div>
+            </div>
+            <p class="erro" id="f-erro" role="alert"></p>
+            <button class="btn prim" type="submit">Liberar o download</button>
+          </form>
+          <div class="pronto" id="pronto" hidden>
+            <h3 style="font-size:22px">Download liberado</h3>
+            <p>Clique para baixar o instalador mais recente. Depois, mande seus dados para o suporte pelo WhatsApp para receber a ativação.</p>
+            <a class="btn prim" href="https://github.com/DavidLucas99/lancador-fastmedic-releases/releases/latest" target="_blank" rel="noopener">Baixar o instalador</a>
+            <a class="btn sec" id="zap" href="https://wa.me/5585988407423" target="_blank" rel="noopener">Enviar meus dados pelo WhatsApp</a>
+            <div class="copiar">Suporte: <span class="mono" id="numero">(85) 98840-7423</span><button type="button" id="copiar">Copiar número</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="miolo">
+    <div><p><b>QuickLancer</b> · lançamento e confirmação de atendimentos</p><p>Compatível com FastMedic. FastMedic é marca de seus respectivos titulares; o QuickLancer é um produto independente.</p></div>
+    <div><p><b>Suporte</b></p><p>WhatsApp <span class="mono">(85) 98840-7423</span></p></div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+  // ---------------- tutorial ----------------
+  const LICOES = [
+    {id: "instalar", t: "Instalar e ativar", r: "Do download até a primeira tela.", passos: [
+      "Baixe o instalador nesta página e abra o arquivo <b>QuickLancer-Setup</b>. Se o Windows mostrar o aviso azul, clique em <b>Mais informações → Executar assim mesmo</b>.",
+      "Ao abrir, o programa mostra o <b>código do computador</b> (formato <span class=\"mono\">XXXX-XXXX-XXXX</span>). Clique em <b>Copiar</b> e envie para o suporte.",
+      "Cole a <b>chave de ativação</b> que você receber (começa com <span class=\"mono\">LF1-</span>) e clique em <b>Ativar</b>.",
+      "Tudo do programa fica na pasta <b>Documentos › QuickLancer</b>: cadastro, planilhas e relatórios."],
+      dica: "A licença fica presa ao computador. Para trocar de máquina, fale com o suporte."},
+    {id: "cadastro", t: "Cadastro", r: "Quem atende e quem é atendido, uma vez só.", passos: [
+      "No menu <b>Terapeutas</b>, clique em <b>Adicionar terapeuta</b>: o nome que vai na planilha, o nome completo igual ao do FastMedic e a especialidade.",
+      "Os números dos pacientes ficam no arquivo <b>Cadastro - terapeutas e pacientes</b>, aba <b>Pacientes</b> (nome | número).",
+      "Médicos com vários procedimentos vão na aba <b>Médicos</b> do cadastro: uma linha por médico, com todos os procedimentos que ele faz.",
+      "Na aba <b>Ajustes</b>, confira a hora em que começa a tarde (padrão 12:00)."],
+      dica: "O nome completo precisa estar igual ao da agenda do FastMedic. O programa tolera acento e uma letra diferente, mas o certo é copiar de lá."},
+    {id: "planilha", t: "Planilha do dia", r: "Os atendimentos de hoje, na ordem.", passos: [
+      "Clique em <b>Nova planilha do dia</b>. Se quiser, escolha de qual planilha anterior trazer os terapeutas e os médicos.",
+      "Na linha azul de cada tabela vai o terapeuta. Abaixo, os pacientes <b>na ordem</b>: o 1º da manhã vai para o 1º horário livre da agenda dele.",
+      "Médicos: na aba <b>Médicos</b>, escreva o paciente e marque <kbd>X</kbd> em cada procedimento feito.",
+      "Salve, <b>feche o Excel</b> e clique em <b>Conferir de novo</b>."],
+      dica: "A planilha também é o registro do dia. Uma por dia, com a data certa no topo."},
+    {id: "lancar", t: "Lançar no FastMedic", r: "Agendar e confirmar o dia inteiro.", passos: [
+      "Confira a faixa no topo: <b>verde</b> está pronto; <b>laranja</b> tem atendimentos com problema, listados em “Precisa de atenção”.",
+      "Nos primeiros dias, preencha <b>Quantos pacientes = 1</b> e confira no FastMedic antes de lançar todos.",
+      "Clique em <b>Lançar</b>. O Chrome abre: faça o login com o seu usuário e clique em <b>Já fiz o login</b>.",
+      "Acompanhe o andamento. No fim, abra o <b>relatório</b>: o que não deu certo está lá, com o motivo e o boleto."],
+      dica: "Se parar no meio, é só lançar de novo: o que já foi feito é pulado."},
+    {id: "confirmar", t: "Só confirmar", r: "Para os dias anteriores.", passos: [
+      "No menu, clique em <b>Só confirmar dias anteriores</b>.",
+      "Escolha o dia na lista. Aparecem quantos faltam confirmar.",
+      "Clique em <b>Confirmar este dia</b> e faça o login quando o Chrome abrir.",
+      "Os que já estavam confirmados, inclusive à mão, são reconhecidos e não dão erro."],
+      dica: "O FastMedic aceita confirmar até 3 dias depois do agendamento."},
+  ];
+  const indice = document.getElementById("indice"), licao = document.getElementById("licao");
+  function mostrar(id, foco) {
+    const l = LICOES.find(x => x.id === id) || LICOES[0];
+    indice.querySelectorAll("button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.id === l.id)));
+    licao.innerHTML = `<h3>${l.t}</h3><p>${l.r}</p><ol>${l.passos.map(p => `<li>${p}</li>`).join("")}</ol><div class="dica"><b>Dica:</b> ${l.dica}</div>`;
+    if (foco) licao.focus();
+  }
+  LICOES.forEach(l => {
+    const b = document.createElement("button");
+    b.type = "button"; b.role = "tab"; b.dataset.id = l.id; b.textContent = l.t;
+    b.addEventListener("click", () => mostrar(l.id, false));
+    indice.appendChild(b);
+  });
+  mostrar("instalar", false);
+
+  // ---------------- planos: mensal x anual ----------------
+  // preço = 1º computador cheio + os demais com 30% de desconto; anual = 10 meses
+  const DESCONTO_EXTRA = 0.15, MESES_ANUAL = 10, MAX_PCS = 20;
+  let periodo = "mensal", pcs = 1;
+  const brl = v => v.toLocaleString("pt-BR", {style: "currency", currency: "BRL"});
+  function precos() {
+    document.getElementById("pcs-n").textContent = pcs;
+    document.getElementById("pcs-menos").disabled = pcs <= 1;
+    document.getElementById("pcs-mais").disabled = pcs >= MAX_PCS;
+    document.querySelectorAll(".plano .preco").forEach(p => {
+      const base = parseFloat(p.dataset.base);
+      const mes = base * (1 + (1 - DESCONTO_EXTRA) * (pcs - 1));
+      const total = periodo === "anual" ? mes * MESES_ANUAL : mes;
+      p.querySelector(".valor").textContent = brl(Math.round(total * 100) / 100);
+      p.querySelector(".unid").textContent = periodo === "anual" ? " /ano" : " /mês";
+      const partes = [`${pcs} computador${pcs > 1 ? "es" : ""}`];
+      if (pcs > 1) partes.push(`${brl(base)} o 1º + ${brl(base * (1 - DESCONTO_EXTRA))} cada um dos outros`);
+      if (periodo === "anual") partes.push(`equivale a ${brl(total / 12)} por mês`);
+      const sem = base * pcs * (periodo === "anual" ? 12 : 1), economia = sem - total;
+      if (economia > 0.5) partes.push(`economia de ${brl(economia)}`);
+      p.nextElementSibling.textContent = partes.join(" · ");
+    });
+  }
+  document.querySelectorAll(".periodo button").forEach(b => b.addEventListener("click", () => {
+    periodo = b.dataset.per;
+    document.querySelectorAll(".periodo button").forEach(x => x.setAttribute("aria-checked", String(x === b)));
+    precos();
+  }));
+  document.getElementById("pcs-menos").addEventListener("click", () => { pcs = Math.max(1, pcs - 1); precos(); });
+  document.getElementById("pcs-mais").addEventListener("click", () => { pcs = Math.min(MAX_PCS, pcs + 1); precos(); });
+  precos();
+
+  // ---------------- demonstrações animadas ----------------
+  const calmo = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const DEMOS = {
+    planilha: {
+      titulo: "A planilha do dia",
+      etapas: ["A equipe escreve os pacientes na ordem, embaixo de cada terapeuta.",
+               "Salva, fecha o Excel e clica em Conferir de novo.",
+               "O QuickLancer confere tudo: está pronto para lançar."],
+      passos: 12,
+      etapa: t => t < 9 ? 0 : t < 10 ? 1 : 2,
+      tela: t => {
+        const nomes = [["Maria Ex.", "Davi Ex."], ["João Ex.", "Lia Ex."], ["Bia Ex.", ""], ["Caio Ex.", "Rui Ex."]];
+        const ordem = [[0,0],[0,1],[1,0],[1,1],[2,0],[3,0],[3,1]];
+        const horas = ["07:00", "07:20", "07:40", "08:00"];
+        const linhas = horas.map((h, i) => `<tr><td class="h">${h}</td>${[0,1].map(j => {
+          const k = ordem.findIndex(o => o[0] === i && o[1] === j);
+          const vis = k >= 0 && t > k + 1, dig = k >= 0 && t === k + 1 && t < 9;
+          return `<td class="${dig ? "digitando" : ""}">${vis ? nomes[i][j] : dig ? `<span class="cursor">${nomes[i][j].slice(0, 3)}</span>` : ""}</td>`;
+        }).join("")}</tr>`).join("");
+        const faixa = t >= 10 ? '<div class="faixa-demo ok">✓ Pronto para lançar: 7 atendimentos de 7 pacientes</div>'
+          : t === 9 ? '<div class="faixa-demo espera">Conferindo a planilha…</div>' : '<div class="faixa-demo espera">Planilha 05-11-2026.xlsx</div>';
+        return `<div class="tela-barra"><i></i><i></i><i></i> Planilha 05-11-2026.xlsx — Excel</div><div class="tela-corpo">
+          <table class="grade"><thead><tr><th class="proc">PROCEDIMENTO ▼</th><th class="proc">PSICOLOGIA (75)</th><th class="proc">FISIOTERAPIA (75)</th></tr>
+          <tr><th>HORÁRIO</th><th>ANA</th><th>BETO</th></tr></thead><tbody>${linhas}</tbody></table>${faixa}</div>`;
+      }
+    },
+    lancar: {
+      titulo: "Lançando sozinho",
+      etapas: ["Procura o paciente pelo número de registro.",
+               "Escolhe o horário pela ordem: o 1º da manhã vai para o 1º horário livre da agenda.",
+               "Agenda na Interconsulta e guarda o número do boleto.",
+               "Confirma a consulta com o boleto e passa para o próximo."],
+      passos: 18,
+      etapa: t => t % 4,
+      tela: t => {
+        const pac = [["Maria Exemplo", "Psicologia"], ["João Exemplo", "Psicologia"], ["Davi Exemplo", "Fisioterapia"], ["Lia Exemplo", "Fisioterapia"]];
+        const horas = ["07:00", "07:20", "07:00", "07:20"];
+        const atual = Math.min(3, Math.floor(t / 4)), fase = t >= 16 ? 4 : t % 4;
+        const rot = ["Buscando paciente…", "Escolhendo horário…", "Agendando…", "Confirmando…"];
+        const linhas = pac.map((p, i) => {
+          let selo, h = "··:··", sub = p[1];
+          if (i < atual || t >= 16) { selo = '<span class="selo ok">Confirmado</span>'; h = horas[i]; sub += ` · boleto <span class="mono">2026/0004${20 + i}-${(i * 3) % 10}</span>`; }
+          else if (i === atual) { selo = `<span class="selo agora">${rot[fase]}</span>`; if (fase >= 1) h = horas[i]; }
+          else selo = '<span class="selo espera">Na fila</span>';
+          return `<div class="slot ${i === atual && t < 16 ? "atual" : ""}"><span class="h">${h}</span><span><b>${p[0]}</b><small>${sub}</small></span>${selo}</div>`;
+        }).join("");
+        const feitos = t >= 16 ? 4 : atual;
+        return `<div class="tela-barra"><i></i><i></i><i></i> QuickLancer — Lançando no FastMedic · ${feitos} de 4</div><div class="tela-corpo">
+          <div class="barra" style="background:#E2ECEC"><i style="animation:none;width:${feitos * 25}%"></i></div><div class="fila">${linhas}</div></div>`;
+      }
+    },
+    medicos: {
+      titulo: "Médicos com vários procedimentos",
+      etapas: ["Na aba Médicos, cada médico tem uma tabela com os procedimentos dele.",
+               "A equipe escreve o paciente uma vez e marca X no que foi feito.",
+               "Cada X vira um agendamento. Os do mesmo paciente ficam no mesmo horário."],
+      passos: 12,
+      etapa: t => t < 1 ? 0 : t < 8 ? 1 : 2,
+      tela: t => {
+        const procs = ["Consulta (72)", "Tonometria", "Fundoscopia", "Ceratometria"];
+        const linhas = [["Ana Exemplo", [1, 1, 1, 0]], ["Rui Exemplo", [1, 0, 1, 1]], ["Lia Exemplo", [1, 1, 0, 0]]];
+        let n = 0;
+        const corpo = linhas.map(([nome, xs], i) => `<tr><td class="h">MANHÃ</td><td>${t >= 1 + i * 2 ? nome : ""}</td>${xs.map(x => {
+          const vis = x && t >= 2 + i * 2; n += vis ? 1 : 0; return `<td class="x">${vis ? "X" : ""}</td>`; }).join("")}</tr>`).join("");
+        const ag = t >= 8 ? `<div class="ag">${linhas.map(([nome, xs], i) => `<div><span class="h">${["07:00", "07:12", "07:24"][i]}</span><b>${nome}</b>${
+          xs.map((x, j) => x && t >= 8 + i ? `<span class="chip">${procs[j]}</span>` : "").join("")}</div>`).join("")}</div>` : "";
+        return `<div class="tela-barra"><i></i><i></i><i></i> Planilha — aba Médicos · DRA. EXEMPLO</div><div class="tela-corpo">
+          <table class="grade"><thead><tr><th>HORÁRIO</th><th>PACIENTE</th>${procs.map(p => `<th class="proc">${p}</th>`).join("")}</tr></thead><tbody>${corpo}</tbody></table>
+          ${ag || '<div class="faixa-demo espera">Marque X em cada procedimento feito</div>'}</div>`;
+      }
+    },
+  };
+  const palco = document.getElementById("demo"), legenda = document.getElementById("demo-legenda");
+  let atual = "planilha", t = 0, timer = null;
+  function quadro() {
+    const d = DEMOS[atual], e = d.etapa(t);
+    palco.innerHTML = `<div class="tela">${d.tela(t)}</div><div><h3>${d.titulo}</h3><ol class="etapas-demo">${
+      d.etapas.map((x, i) => `<li class="${i === e ? "on" : ""}">${x}</li>`).join("")}</ol></div>`;
+  }
+  function tocar(nome) {
+    atual = nome; clearInterval(timer);
+    document.querySelectorAll(".demo-abas button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.demo === nome)));
+    const d = DEMOS[nome];
+    legenda.textContent = calmo ? "Animação desligada pelas configurações do seu sistema: mostrando o resultado final." : "Demonstração animada, repete sozinha.";
+    t = d.passos; quadro();                     // começa mostrando o resultado (a página parada já mostra tudo)
+    if (calmo) return;
+    let pausa = 3;
+    timer = setInterval(() => {
+      if (t >= d.passos) { if (pausa-- > 0) return; t = 0; pausa = 3; } else t++;
+      quadro();
+    }, 750);
+  }
+  document.querySelectorAll(".demo-abas button").forEach(b => b.addEventListener("click", () => tocar(b.dataset.demo)));
+  tocar("planilha");
+
+  // ---------------- download com contato ----------------
+  const form = document.getElementById("form"), erro = document.getElementById("f-erro");
+  form.addEventListener("submit", e => {
+    e.preventDefault();
+    const v = id => document.getElementById(id).value.trim();
+    const nome = v("f-nome"), inst = v("f-inst"), cidade = v("f-cidade"), contato = v("f-contato");
+    if (!nome || !inst || !contato) { erro.textContent = "Preencha nome, instituição e WhatsApp ou e-mail."; return; }
+    erro.textContent = "";
+    const msg = `Olá! Baixei o QuickLancer.\nNome: ${nome}\nInstituição: ${inst}${cidade ? "\nCidade: " + cidade : ""}\nContato: ${contato}`;
+    document.getElementById("zap").href = "https://wa.me/5585988407423?text=" + encodeURIComponent(msg);
+    form.hidden = true;
+    document.getElementById("pronto").hidden = false;
+  });
+  document.getElementById("copiar").addEventListener("click", ev => {
+    const txt = "85988407423", b = ev.currentTarget;
+    const ok = () => { b.textContent = "Copiado"; setTimeout(() => b.textContent = "Copiar número", 1800); };
+    try {
+      navigator.clipboard.writeText(txt).then(ok, () => { window.getSelection().selectAllChildren(document.getElementById("numero")); });
+    } catch (_) { window.getSelection().selectAllChildren(document.getElementById("numero")); }
+  });
+})();
+</script>
+
+</body>
+</html>
