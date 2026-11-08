@@ -221,6 +221,9 @@ form{display:flex;flex-direction:column;gap:14px;min-width:0}
 footer{padding-block:48px 56px;color:var(--suave);font-size:14px}
 footer .miolo{display:flex;flex-wrap:wrap;gap:20px 40px;justify-content:space-between}
 footer b{color:var(--texto)}
+footer a{color:var(--teal)}
+.aceite a{color:var(--menta)}
+.aceite{font-size:13px;color:inherit;opacity:.85;margin:0}
 footer p+p{margin-top:6px}
 
 @media (max-width:900px){
@@ -432,6 +435,7 @@ footer p+p{margin-top:6px}
             </div>
             <p class="erro" id="f-erro" role="alert"></p>
             <button class="btn prim" type="submit">Liberar o download</button>
+            <p class="aceite">Ao baixar, você concorda com os <a href="termos.html#termos" target="_blank">Termos de uso</a> e a <a href="termos.html#privacidade" target="_blank">Política de privacidade</a>.</p>
           </form>
           <div class="pronto" id="pronto" hidden>
             <h3 style="font-size:22px">Download liberado</h3>
@@ -449,7 +453,8 @@ footer p+p{margin-top:6px}
 <footer>
   <div class="miolo">
     <div><p><b>QuickLancer</b> · lançamento e confirmação de atendimentos</p><p>Compatível com FastMedic. FastMedic é marca de seus respectivos titulares; o QuickLancer é um produto independente.</p></div>
-    <div><p><b>Suporte</b></p><p>WhatsApp <span class="mono">(85) 98840-7423</span></p></div>
+    <div><p><b>Suporte</b></p><p>WhatsApp <span class="mono">(85) 98840-7423</span></p><p><a href="mailto:quicklancer.contato@gmail.com">quicklancer.contato@gmail.com</a></p></div>
+    <div><p><b>Legal</b></p><p><a href="termos.html#termos">Termos de uso</a></p><p><a href="termos.html#privacidade">Política de privacidade</a></p></div>
   </div>
 </footer>
 
